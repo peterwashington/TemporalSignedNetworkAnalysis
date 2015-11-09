@@ -65,14 +65,23 @@ april_august_network = read_network("Datasets/AprilAugustTwitterSentiment.csv")
 networks = [april_may_network, april_june_network, april_july_network, april_august_network]
 
 for index in range(len(networks)):
+
+	max_timestamp = float('inf')
+
 	if index == 0:
 		print "April to May Network"
+		max_timestamp = 30 * 1440
 	if index == 1:
 		print "April to June Network"
+		max_timestamp = 61 * 1440
 	if index == 2:
 		print "April to July Network"
+		max_timestamp = 91 * 1440
 	if index == 3:
 		print "April to August Network"
+		max_timestamp = 122 * 1440
+
+
 	print "============================"
 	network = networks[index]
 
@@ -108,6 +117,29 @@ for index in range(len(networks)):
 				if tweet[0] == 0:
 					total_neutral_tweets += 1
 					num_neutral += 1
+
+	### Find triads.
+	triad_weights = []
+	for a in network:
+		for b in network[a]:
+			if a != b and b in network:
+				for c in network[b]:
+					if c in network and c != a and c != b and (c in network[a] or a in network[c]):
+						edge_one = 0
+						edge_two = 0
+						edge_three = 0
+						for weight in network[a][b]:
+							edge_one += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[a][b])
+						for weight in network[b][c]:
+							edge_two += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[b][c])
+						if c in network[a]:
+							for weight in network[a][c]:
+								edge_three += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[a][c])
+						elif a in network[c]:
+							for weight in network[c][a]:
+								edge_three += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[c][a])
+						triad_weights.append(edge_one + edge_two + edge_three)
+	print sorted(triad_weights)
 
 
 	print "Average Outdegree: ", average_outdegree / total_nodes
