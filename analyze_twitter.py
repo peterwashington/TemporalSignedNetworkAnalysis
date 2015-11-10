@@ -2,6 +2,8 @@
 ### Peter Washington
 ### Analyze Signed Twitter Netork
 
+import matplotlib.pyplot as plt
+import math
 
 def read_network(filename):
 	signed_network = {}
@@ -70,16 +72,16 @@ for index in range(len(networks)):
 
 	if index == 0:
 		print "April to May Network"
-		max_timestamp = 30 * 1440
+		max_timestamp = 30 * 1440 + 2*1440
 	if index == 1:
 		print "April to June Network"
-		max_timestamp = 61 * 1440
+		max_timestamp = 61 * 1440 + 2*1440
 	if index == 2:
 		print "April to July Network"
-		max_timestamp = 91 * 1440
+		max_timestamp = 91 * 1440 + 2*1440
 	if index == 3:
 		print "April to August Network"
-		max_timestamp = 122 * 1440
+		max_timestamp = 122 * 1440 + 2*1440
 
 
 	print "============================"
@@ -118,6 +120,13 @@ for index in range(len(networks)):
 					total_neutral_tweets += 1
 					num_neutral += 1
 
+	total_tweets = total_neutral_tweets + total_negative_tweets + total_positive_tweets
+
+	average_outdegree /= total_nodes
+	average_unique_tweets /= total_nodes
+	average_positive_sentiment /= num_positive
+	average_negative_sentiment /= num_negative
+
 	### Find triads.
 	triad_weights = []
 	for a in network:
@@ -125,34 +134,41 @@ for index in range(len(networks)):
 			if a != b and b in network:
 				for c in network[b]:
 					if c in network and c != a and c != b and (c in network[a] or a in network[c]):
-						edge_one = 0
-						edge_two = 0
-						edge_three = 0
+						edge_one = 0.0
+						edge_two = 0.0
+						edge_three = 0.0
 						for weight in network[a][b]:
-							edge_one += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[a][b])
+							edge_one += (total_tweets / average_positive_sentiment) * ((1.0*weight[0])/math.sqrt(max_timestamp - weight[1]))
 						for weight in network[b][c]:
-							edge_two += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[b][c])
+							edge_two += (total_tweets / average_positive_sentiment) * ((1.0*weight[0])/math.sqrt(max_timestamp - weight[1]))
 						if c in network[a]:
 							for weight in network[a][c]:
-								edge_three += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[a][c])
+								edge_three += (total_tweets / average_positive_sentiment) * ((1.0*weight[0])/math.sqrt(max_timestamp - weight[1]))
 						elif a in network[c]:
 							for weight in network[c][a]:
-								edge_three += (1.0/(max_timestamp - weight[1]) * weight[0]) / len(network[c][a])
+								edge_three += (total_tweets / average_positive_sentiment) * ((1.0*weight[0])/math.sqrt(max_timestamp - weight[1]))
 						triad_weights.append(edge_one + edge_two + edge_three)
 	print sorted(triad_weights)
 
+	plt.hist(triad_weights, bins=100)
+	plt.title("Triad Weights at time: " + str(index))
+	plt.xlabel("Triad Weight")
+	plt.ylabel("Frequency")
+	plt.show()
 
-	print "Average Outdegree: ", average_outdegree / total_nodes
-	print "Average Unique Users Tweeted To: ", average_unique_tweets / total_nodes
+
+	print "Average Outdegree: ", average_outdegree 
+	print "Average Unique Users Tweeted To: ", average_unique_tweets
 	print "Total Positive Tweets: ", total_positive_tweets
 	print "Total Negative Tweets: ", total_negative_tweets
 	print "Total Neutral Tweets: ", total_neutral_tweets
-	print "Average Positive Sentiment: ", average_positive_sentiment / num_positive
-	print "Average Negative Sentiment: ", average_negative_sentiment / num_negative
+	print "Average Positive Sentiment: ", average_positive_sentiment
+	print "Average Negative Sentiment: ", average_negative_sentiment
 
 	print 
 	print 
 	print 
+
 
 
 
